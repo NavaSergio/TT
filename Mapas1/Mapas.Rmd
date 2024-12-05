@@ -1,0 +1,93 @@
+---
+title: "mapa1"
+output: html_document
+date: "2024-12-05"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Función para verificar e instalar las librerías necesarias
+install_if_missing <- function(packages) {
+  for (pkg in packages) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      install.packages(pkg)
+    }
+    library(pkg, character.only = TRUE)
+  }
+}
+
+# Lista de paquetes necesarios
+packages <- c("sf", "dplyr", "ggplot2", "readxl")
+install_if_missing(packages)
+
+```
+
+
+```{r}
+# Leer los shapefiles de los municipios de mèxico
+shapefile_municipios <- st_read("mun21gw/mun21gw.shp")
+```
+```{r}
+
+# Graficar el área metropolitana
+ggplot(data = shapefile_municipios) +
+  geom_sf(fill = "lightblue", color = "darkblue") +
+  ggtitle("Municipios") +
+  theme_minimal()
+```
+```{r}
+summary(shapefile_municipios)
+```
+
+```{r}
+
+load("pob_totalwide.RData")
+summary(pob_total)
+```
+
+```{r}
+shapefile_municipios <- shapefile_municipios %>%
+  left_join(pob_total, by = c("CVEGEO" = "CVE_MUN"))
+
+```
+
+
+```{r}
+
+# Crear el heatmap por estado para el año 2024
+mapa_2024 <- ggplot(data = shapefile_municipios) +
+  geom_sf(aes(fill = Total_2024), color = NA) +
+  scale_fill_gradient(low = "beige", high = "red", na.value = "gray80", 
+                      name = "Población 2024") +
+  ggtitle("Mapa de Población Total por Municipio (2024)") +
+  theme_minimal()
+print(mapa_2024)
+
+```
+
+```{r}
+
+# Crear mapas por cada entidad
+lista_entidades <- unique(shapefile_municipios$CVE_ENT)
+
+for (entidad in lista_entidades) {
+  # Filtrar el shapefile por la entidad actual
+  shapefile_entidad <- shapefile_municipios %>% filter(CVE_ENT == entidad)
+  
+  # Crear el mapa
+  mapa <- ggplot(data = shapefile_entidad) +
+    geom_sf(aes(fill = Total_2024), color = NA) +
+    scale_fill_gradient(low = "beige", high = "red", na.value = "gray80",
+                        name = "Población Total") +
+    ggtitle(paste("Mapa de Población Total 2024 - Entidad", shapefile_entidad$NOM_ENT)) +
+    theme_minimal()
+  
+  # Guardar el mapa como imagen
+  ggsave(filename = paste0("mapa_entidad_", entidad, ".png"),
+         plot = mapa, width = 8, height = 6)
+  
+  # Mostrar el mapa en pantalla (opcional)
+  print(mapa)
+}
+```
+
