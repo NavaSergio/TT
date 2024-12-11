@@ -72,8 +72,8 @@ lista_entidades <- unique(shapefile_municipios$CVE_ENT)
 
 for (entidad in lista_entidades) {
   # Filtrar el shapefile por la entidad actual
-  shapefile_entidad <- shapefile_municipios %>% filter(CVE_ENT == entidad)
-  
+  shapefile_entidad <- shapefile_municipios %>% filter(CVE_ENT == entidad) %>%   filter(AREA > 100)
+
   # Crear el mapa
   mapa <- ggplot(data = shapefile_entidad) +
     geom_sf(aes(fill = Total_2024), color = NA) +
@@ -89,5 +89,48 @@ for (entidad in lista_entidades) {
   # Mostrar el mapa en pantalla (opcional)
   print(mapa)
 }
+```
+
+```{r}
+
+  # Filtrar el shapefile por la entidad actual
+  colima <- shapefile_municipios %>% filter(CVE_ENT == "06") #%>%   filter(AREA > 500)
+# Checamos el sistema de coordenadas 
+## de referencia (crs)
+# st_crs(colima)
+
+
+# Crear un polígono con los límites de las coordenadas
+bbox_coords <- matrix(
+  c(-104.76983, 18.65329,  # minX, minY
+    -104.76983, 19.563769, # minX, maxY
+    -103.47499, 19.563769, # maxX, maxY
+    -103.47499, 18.65329,  # maxX, minY
+    -104.76983, 18.65329), # cerrar el polígono
+  ncol = 2, byrow = TRUE
+)
+
+# Transformar a WGS84 (EPSG:4326)
+polygon_wgs84 <- st_transform(bbox_polygon, crs = 4326)
+
+#print(polygon_wgs84)
+# Filtrar el shapefile para conservar solo las geometrías dentro del bbox
+
+shapefile_filtrado <- st_intersection(colima, polygon_wgs84)
+  # Crear el mapa
+  mapa <- ggplot(data = shapefile_filtrado) +
+    geom_sf(aes(fill = Total_2024), color = NA) +
+    scale_fill_gradient(low = "beige", high = "red", na.value = "gray80",
+                        name = "Población Total") +
+    ggtitle(paste("Mapa de Población Total 2024 - Entidad", shapefile_entidad$NOM_ENT)) +
+    theme_minimal()
+  
+  # Guardar el mapa como imagen
+  ggsave(filename = paste0("mapa_entidad_colima.png"),
+         plot = mapa, width = 8, height = 6)
+  
+  # Mostrar el mapa en pantalla (opcional)
+  print(mapa)
+
 ```
 
