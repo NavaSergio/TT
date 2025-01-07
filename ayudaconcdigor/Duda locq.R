@@ -4,7 +4,9 @@
 #install.packages(c("REAT","ggplot2","readxl"))
 #library(REAT)
 
-packages<-c("REAT","readxl", "ggplot2", "psych","GGally","dplyr","tidyverse","groupdata2","sf","rgdal","spData" ,"spdep","mapview","colorRamps","fs","foreign","xlsx")
+packages<-c("REAT","readxl", "ggplot2", "psych","GGally","dplyr","tidyverse",
+            "groupdata2","sf","rgdal","spData" ,"spdep","mapview","colorRamps",
+            "fs","foreign","xlsx","stringr")
 
 if(length(setdiff(packages,rownames(installed.packages())))>0){
   install.packages(setdiff(packages,rownames(installed.packages())),repos="http://cran.rstudio.com")
@@ -18,6 +20,7 @@ matriz<-read_xlsx("Modif base total secre.xlsx")
 str(matriz)
 #cambia valores vacío por 0
 #matriz[is.na(matriz)]<-0
+matriz$No_sector <- str_pad(matriz$No_sector, width = 2, pad = "0")
 
 
 #convierte las variables de caracter a factores 
