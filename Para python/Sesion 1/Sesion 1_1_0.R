@@ -18,8 +18,7 @@
 #install.packages(c("REAT","ggplot2","readxl"))
 #library(REAT)
 
-packages<-c("REAT","readxl", "openxlsx","ggplot2", "psych","GGally","dplyr","tidyverse","groupdata2","sf","spData" ,"spdep","mapview","colorRamps","fs","foreign")
-
+packages<-c("REAT","readxl", "readxl","ggplot2", "psych","GGally","dplyr","tidyverse","groupdata2","sf","spData" ,"spdep","mapview","colorRamps","fs","foreign","openxlsx")
 if(length(setdiff(packages,rownames(installed.packages())))>0){
   install.packages(setdiff(packages,rownames(installed.packages())),repos="http://cran.rstudio.com")
 }
@@ -28,7 +27,8 @@ sapply(packages,require,character.only=TRUE)
 
 
 ##Lee archivo excel
-matriz<-read_xlsx("Modif base total secre.xlsx")
+matriz<-read_xlsx("Modif base total secre pobocup.xlsx")
+matriz = as.data.frame(matriz)
 str(matriz)
 
 #cambia valores vacío por 0
@@ -59,7 +59,7 @@ matriz_total_sect<-matriz[,c(1:3,36)]
 
 matriz_est_long<-matriz_est1%>%
   pivot_longer(
-    cols="1":"32",
+    cols="Aguascalientes":"Zacatecas",
     names_to = "CVE_ENT",
     values_to = "Pers_ocup" )
   
@@ -73,9 +73,9 @@ matriz_est_long<-matriz_est1%>%
  # Convierte la matriz de totales estatales en formato largo
  matriz_totest_long<-matriz_total_est%>% 
    pivot_longer(
-     cols="1":"TOTAL SECTORIAL",
+     cols="Aguascalientes":"TOTAL_SECTORIAL",
      names_to = "CVE_ENT",
-     values_to = "Pers_ocup" )%>%filter(!(CVE_ENT=="TOTAL SECTORIAL"))
+     values_to = "Pers_ocup" )%>%filter(!(CVE_ENT=="TOTAL_SECTORIAL"))
  
  # Calcula el porcentaje de participación total de cada estado por sector
  
@@ -102,14 +102,16 @@ verifica<- rowSums(participest_wider[ , c(36:67)])
  particip_sect<-matriz_est_long%>% 
    group_by(Año,CVE_ENT)%>%
    mutate(share_sect=round(100*Pers_ocup/sum(Pers_ocup),2))%>%
-   ungroup
+   ungroup()
  
  # Ordena el archivo de participación sectorial para que se vea la contribucion 
  #particip_sect<-particip_sect[order(particip_sect$CVE_ENT,particip_sect$Año,particip_sect$No_sector),]
  
- verif_part_sect<-particip_sect%>% 
-   group_by(Año, CVE_ENT)%>%
+
+ verif_part_sect <- particip_sect %>% 
+   group_by(Año, CVE_ENT) %>%
    summarise(verifica = sum(share_sect), .groups = "drop")
+ 
  
  verif_part_sect<-verif_part_sect[order(verif_part_sect$Año, verif_part_sect$CVE_ENT),]
  
@@ -123,13 +125,13 @@ verifica<- rowSums(participest_wider[ , c(36:67)])
  
  total<-matriz_totsect_long%>% 
    group_by(Año)%>%
-   mutate(gran_total=sum(`TOTAL SECTORIAL`))
+   mutate(gran_total=sum(`TOTAL_SECTORIAL`))
 
  # calcula la participacion total de cada sector por año
  
  particip_totsect<-total%>% 
    group_by(Año,No_sector,Sector)%>%
-   mutate(share_sect=round(100*`TOTAL SECTORIAL`/gran_total,2))%>%
+   mutate(share_sect=round(100*`TOTAL_SECTORIAL`/gran_total,2))%>%
    ungroup
  
  # verifica que la suma de participaciones sea 100. La variación es por redondeos.
@@ -242,10 +244,12 @@ participsect_wider<-particip_sect %>%
                           "Veracruz", "Yucatan" , "Zacatecas","Total_sectorial") 
  
  ## Para 2018
- 
+
  coeflocal2018<-NULL
  for(i in 4:35){
-   coefloc<-locq(unlist(matriz[2:20,i]),unlist(matriz[1,i]),unlist(matriz[2:20,36]),unlist(matriz[1,36]),plot.results = TRUE)
+   print(locq(unlist(matriz[2:20,i]),unlist(matriz[1,i]),unlist(matriz[2:20,36]),unlist(matriz[1,36])))
+   coefloc<-locq(unlist(matriz[2:20,i]),unlist(matriz[1,i]),unlist(matriz[2:20,36]),unlist(matriz[1,36]))
+   #print(coefloc)
    coeflocal2018<-cbind(coeflocal2018,coefloc)
  }
  
