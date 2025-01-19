@@ -1,0 +1,114 @@
+---
+title: "Coeficientes de aglomeración"
+author: "Dolores Sanchez"
+date: "2025-01-17"
+output: pdf_document
+---
+
+# Cooeficientes de Aglomeración y Coaglomeración de Ellison-Glaeser
+
+Para calcular estos índices en R necesitamos tener los datos en formato largo. 
+Se cargan todas las librerías necesarias, se leerán los datos de población ocupada sin los totales sectoriales o regionales y se reemplazan los valores faltantes por cero.
+
+```{r setup, include=FALSE}
+setwd("~/Documents/Sesion 5")
+
+packages<-c("REAT","wINEQ","readxl", "ggplot2", "psych","GGally","dplyr","tidyverse","groupdata2","sf","spData" ,"spdep","mapview","colorRamps","fs","foreign","xlsx")
+
+if(length(setdiff(packages,rownames(installed.packages())))>0){
+  install.packages(setdiff(packages,rownames(installed.packages())),repos="http://cran.rstudio.com")
+}
+
+sapply(packages,require,character.only=TRUE)
+
+mat_pobocup<-read_xlsx("Modif base total secre pobocup.xlsx")
+
+matriz_pob<-mat_pobocup[c(1:19,21:39),c(1:35)]
+ 
+matriz_pob$Año<-as.factor(matriz_pob$Año)
+matriz_pob$Sector<-as.factor(matriz_pob$Sector)
+matriz_pob$No_sector <- str_pad(matriz_pob$No_sector, width = 2, pad = "0")
+matriz_pob$No_sector<-as.factor(matriz_pob$No_sector)
+matriz_pob[is.na(matriz_pob)]<-0
+
+
+```
+
+Se rearregla la matriz en formato largo, se separan por año y se obtiene el total de la población ocupada por estado y de los datos, solo se queda con 4 columnas (ENTIDAD, SECTOR, PERSONAL OCUPADO Y PERSONAL OCUPADO ESTATAL). 
+
+```{r datos, include=FALSE}
+matriz_longpob<-matriz_pob%>%
+  pivot_longer(
+    cols="Aguascalientes":"Zacatecas",
+    names_to = "ENTIDAD",
+    values_to = "Pers_ocup" )
+
+matpob_2018<-matriz_longpob[matriz_longpob$Año=="2018",]
+
+matpob_2013<-matriz_longpob%>%filter(Año=="2013")
+
+matpob2_2018<-matpob_2018%>%
+  group_by(Año,ENTIDAD)%>%
+  mutate(Pers_ocupEst=sum(Pers_ocup))
+
+labels_est<-c("Aguascalientes","Baja California", 
+              "Baja california Sur", 
+              "Campeche", "Coahuila","Colima", "Chiapas",
+              "Chihuahua","CDMX", "Durango", "Guanajuato",
+              "Guerrero", "Hidalgo", "Jalisco", "México", "Michoacán", 
+              "Morelos", "Nayarit", "Nuevo León", "Oaxaca", "Puebla",
+              "Querétaro", "Quintana Roo", "San Luis Potosí", "Sinaloa",
+              "Sonora", "Tabasco", "Tamaulipas", "Tlaxcala", 
+              "Veracruz", "Yucatán" , "Zacatecas" )     
+
+matpob2_2018$ENTIDAD<-factor(matpob2_2018$ENTIDAD,levels=labels_est)
+
+matpob2_2018<-matpob2_2018[,c(4,3,5,6)]
+
+matpob2_2013<-matpob_2013%>%
+  group_by(Año,ENTIDAD)%>%
+  mutate(Pers_ocupEst=sum(Pers_ocup))
+
+
+matpob2_2013<-matpob2_2013[,c(4,3,5,6)]
+
+```
+
+##Calcula los índices de aglomeración de  Ellison-Glaeser
+
+La instrucción **ellison.a()** se aplica para calcular el índice sobre una única industria, mientras que **ellison.a2()** se aplica cuando se tiene toda la matriz SECRE.
+
+```{r indices}
+
+elis1_2018<-ellison.a(matpob2_2018$Pers_ocup,matpob2_2018$Pers_ocupEst,matpob2_2018$ENTIDAD)
+elis1_2013<-ellison.a(matpob2_2013$Pers_ocup,matpob2_2013$Pers_ocupEst,matpob2_2013$ENTIDAD)
+
+elis_2018<-ellison.a2(matpob2_2018$Pers_ocup,matpob2_2018$Sector,matpob2_2018$ENTIDAD)
+elis_2013<-ellison.a2(matpob2_2013$Pers_ocup,matpob2_2013$Sector,matpob2_2013$ENTIDAD)
+
+elis_2018
+elis_2013
+
+```
+
+## Calcula el índice de coaglomeración de Ellison-Glaeser 
+
+
+```{r coaglom}
+eliscoag_2018<-ellison.c(matpob2_2018$Pers_ocup,matpob2_2018$Sector,matpob2_2018$ENTIDAD,matpob2_2018$Pers_ocupEst)
+eliscoag_2018
+
+eliscoag_2013<-ellison.c(matpob2_2013$Pers_ocup,matpob2_2013$Sector,matpob2_2013$ENTIDAD,matpob2_2013$Pers_ocupEst)
+eliscoag_2013
+```
+
+### Ellison coaglomeracion por pares de industrias
+```{r coagpares, include=FALSE}
+eliscoag2_2018<-ellison.c2(matpob2_2018$Pers_ocup,matpob2_2018$Sector,matpob2_2018$ENTIDAD,matpob2_2018$Pers_ocupEst)
+eliscoag2_2018
+
+eliscoag2_2013<-ellison.c2(matpob2_2013$Pers_ocup,matpob2_2013$Sector,matpob2_2013$ENTIDAD,matpob2_2013$Pers_ocupEst)
+eliscoag2_2013
+
+```
+
