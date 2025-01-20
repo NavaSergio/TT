@@ -46,7 +46,7 @@ matriz[is.na(matriz)]<-0
 #Elimina los totales para quedarse solo con los datos estatales-sectoriales
 matriz_est<-matriz%>%filter(!(No_sector=="01"))
 
-matriz_est1<-matriz_est[,c(1:35)]
+#matriz_est1<-matriz_est[,c(1:35)]
 matriz_est1<-matriz_est[,-36]
 
 # Divide la matriz y solo se queda con totales estatales
