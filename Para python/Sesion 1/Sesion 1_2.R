@@ -19,7 +19,7 @@ setwd("~/Documents/Sesion 1")
 #install.packages(c("REAT","ggplot2","readxl"))
 #library(REAT)
 
-packages<-c("REAT","readxl", "xlsx","ggplot2", "psych","dplyr","tidyverse","colorRamps","fs","foreign")
+packages<-c("REAT","readxl", "openxlsx","ggplot2", "psych","dplyr","tidyverse","colorRamps","fs","foreign")
 
 if(length(setdiff(packages,rownames(installed.packages())))>0){
   install.packages(setdiff(packages,rownames(installed.packages())),repos="http://cran.rstudio.com")

@@ -8,9 +8,9 @@
 
 
 ## limpia el ambiente de trabajo
-rm(list = ls())
+#rm(list = ls())
 
-setwd("~/Documents/Sesion 4 Graficas")
+#setwd("~/Documents/Sesion 4 Graficas")
 
 packages<-c("readxl", "ggplot2", "psych","GGally","dplyr","tidyverse","groupdata2","sf","rgdal","spData" ,"spdep","mapview","colorRamps","fs","foreign","xlsx")
 
