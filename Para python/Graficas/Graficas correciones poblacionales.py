@@ -67,7 +67,7 @@ with PdfPages(output_file) as pdf:
         sns.lineplot(
             data=data,
             x="Año", y="Pob_Est", hue="Sexo", style="Sexo",
-            markers=markers, palette=palette
+            markers=markers, palette=palette, errorbar=None
         )
         plt.title(f"Proyección de la población de 17 a 19 años \n{labels_entidad[j-1]}")
         plt.xlabel("Año")
