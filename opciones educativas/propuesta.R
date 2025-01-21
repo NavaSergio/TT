@@ -1,18 +1,25 @@
 # Cargar bibliotecas necesarias
-
 packages<-c("dplyr","openxlsx")
-
 if(length(setdiff(packages,rownames(installed.packages())))>0){
   install.packages(setdiff(packages,rownames(installed.packages())),repos="http://cran.rstudio.com")
 }
-
 sapply(packages,require,character.only=TRUE)
+
 
 # Cargar los datos
 altadem_folios <- read.csv("altadem_folios.csv")
 alta <- read.csv("alta.csv")
 demalta_gen1 <- read.csv("demalta_gen1.csv")
 oferalt_gen1long <- read.csv("oferalt_gen1long.csv")
+
+# Conteo de altadem_folios
+
+altadem_folios %>%
+  group_by(SEXO) %>%
+  summarize(
+    total_no_asignados = n(),
+    .groups = "drop"
+    )
 
 # Fijar la semilla para fines de reproducibilidad
 set.seed(731)
@@ -34,10 +41,13 @@ for (opcion in unique(demof_altgen1$CVE_OPC)) {
   
   print("Opción:")
   print(opcion)
+  
   # Filtrar datos por opción
   datos_opcion <- demof_altgen1 %>%
     filter(CVE_OPC == opcion)
+  
   print(datos_opcion)
+  
   # Aspirantes por opción
   aspirantes_opcion <- altadem_folios %>%
     filter(OPC_ED01 == opcion)
@@ -112,3 +122,29 @@ write.xlsx(resumen, "resumen_asignacion.xlsx")
 
 # Guardar resultados en archivo
 write.csv(asignacion_final, "asignacion_final.csv", row.names = FALSE)
+
+
+
+# Generar la lista de no asignados
+no_asignados <- altadem_folios %>%
+  filter(!(FOLIO %in% asignacion_final$FOLIO)) %>%
+  select(FOLIO, SEXO, OPC_ED01)
+
+# Crear un resumen con el conteo de no asignados por sexo
+resumen_no_asignados <- no_asignados %>%
+  group_by(SEXO) %>%
+  summarize(
+    total_no_asignados = n(),
+    .groups = "drop"
+  )
+
+# Exportar no asignados y su resumen a un archivo Excel
+wb <- createWorkbook()
+addWorksheet(wb, "No_Asignados")
+writeData(wb, "No_Asignados", no_asignados)
+
+addWorksheet(wb, "Resumen_No_Asignados")
+writeData(wb, "Resumen_No_Asignados", resumen_no_asignados)
+
+saveWorkbook(wb, "no_asignados.xlsx", overwrite = TRUE)
+
