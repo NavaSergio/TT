@@ -110,8 +110,11 @@ bbox_coords <- matrix(
   ncol = 2, byrow = TRUE
 )
 
-# Transformar a WGS84 (EPSG:4326)
-polygon_wgs84 <- st_transform(bbox_polygon, crs = 4326)
+# Crear un objeto `sf` a partir del bbox_coords transformado a WGS84 (EPSG:4326)
+polygon_wgs84  <- st_polygon(list(bbox_coords)) %>%
+  st_sfc(crs = 4326) # Asignar CRS WGS84
+
+
 
 #print(polygon_wgs84)
 # Filtrar el shapefile para conservar solo las geometrías dentro del bbox
@@ -133,4 +136,7 @@ shapefile_filtrado <- st_intersection(colima, polygon_wgs84)
   print(mapa)
 
 ```
+
+
+
 
