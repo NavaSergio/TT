@@ -22,7 +22,7 @@ altadem_folios %>%
     )
 
 # Fijar la semilla para fines de reproducibilidad
-set.seed(731)
+set.seed(7317)
 
 # Filtrar opciones de alta demanda
 altas_opciones <- alta$x
@@ -53,71 +53,130 @@ for (opcion in unique(demof_altgen1$CVE_OPC)) {
     filter(OPC_ED01 == opcion)
   
   # Separar por género
-  hombres <- aspirantes_opcion %>% filter(SEXO == "H")
   mujeres <- aspirantes_opcion %>% filter(SEXO == "M")
+  hombres <- aspirantes_opcion %>% filter(SEXO == "H")
+
   
   # Obtener oferta por género
+  oferta_mujeres <- datos_opcion %>% filter(SEXO == "M") %>% pull(OFERTA)  
   oferta_hombres <- datos_opcion %>% filter(SEXO == "H") %>% pull(OFERTA)
-  oferta_mujeres <- datos_opcion %>% filter(SEXO == "M") %>% pull(OFERTA)
+
   
   print("Oferta Hombres y Mujeres")
   print(oferta_hombres)
   print(oferta_mujeres)
   
-  # Caso 1: Ambos géneros exceden la oferta
-  asignados_hombres <- sample(hombres$FOLIO, min(nrow(hombres), oferta_hombres))
-  asignados_mujeres <- sample(mujeres$FOLIO, min(nrow(mujeres), oferta_mujeres))
+
+  # Caso 1: Ambos géneros exceden los lugares
+  if (nrow(hombres) > oferta_hombres && nrow(mujeres) > oferta_mujeres) {
+    # Sorteo de lugares para mujeres
+    asignados_mujeres <- sample(mujeres$FOLIO, oferta_mujeres)
+    
+    # Mujeres no asignadas
+    mujeres_restantes <- mujeres$FOLIO[!mujeres$FOLIO %in% asignados_mujeres]
+    
+    # Juntar mujeres no asignadas con hombres
+    todos_restantes <- c(mujeres_restantes, hombres$FOLIO)
+    
+    # Sorteo de lugares restantes entre hombres y mujeres no asignadas
+    asignados_restantes <- sample(todos_restantes, oferta_hombres)
+    
+    # Dividir los asignados restantes entre hombres y mujeres
+    asignados_hombres <- intersect(asignados_restantes, hombres$FOLIO)
+    asignados_mujeres_restantes <- intersect(asignados_restantes, mujeres_restantes)
+    
+    # Actualizar asignación final
+    asignados_mujeres <- c(asignados_mujeres, asignados_mujeres_restantes)
+  }
   
-  print("Primeros 5 asignados Hombres y Mujeres")
-  print(head(asignados_hombres))
-  print(head(asignados_mujeres))  
   
-  # Caso 2: Mujeres caben y sobran lugares
-  if (nrow(mujeres) <= oferta_mujeres) {
+  # Caso 2: Mujeres exceden la mitad de los lugares y hombres no
+  else if (nrow(mujeres) > oferta_mujeres && nrow(hombres) <= oferta_hombres) {
+      # Sorteo inicial: Asignar lugares a las mujeres
+      asignados_mujeres <- sample(mujeres$FOLIO, oferta_mujeres)
+      
+      # Identificar mujeres no asignadas
+      mujeres_restantes <- mujeres$FOLIO[!mujeres$FOLIO %in% asignados_mujeres]
+      
+      # Juntar mujeres no asignadas con hombres
+      todos_restantes <- c(mujeres_restantes, hombres$FOLIO)
+      
+      # Sorteo de lugares restantes entre todos los restantes
+      asignados_restantes <- sample(todos_restantes, oferta_hombres)
+      
+      # Dividir los asignados restantes entre hombres y mujeres
+      asignados_hombres <- intersect(asignados_restantes, hombres$FOLIO)
+      asignados_mujeres_restantes <- intersect(asignados_restantes, mujeres_restantes)
+      
+      # Actualizar asignación final de mujeres
+      asignados_mujeres <- c(asignados_mujeres, asignados_mujeres_restantes)
+    }
+  
+  
+  
+  # Caso 3: Solo hombres exceden los lugares
+  else if (nrow(hombres) > oferta_hombres && nrow(mujeres) <= oferta_mujeres) {
     asignados_mujeres <- mujeres$FOLIO
-    sobrante_mujeres <- oferta_mujeres - nrow(mujeres)
-    asignados_hombres <- c(
-      asignados_hombres,
-      sample(hombres$FOLIO[!hombres$FOLIO %in% asignados_hombres], 
-             min(nrow(hombres) - length(asignados_hombres), sobrante_mujeres))
-    )
+    lugares_sobrantes <- oferta_hombres + oferta_mujeres - nrow(mujeres)
+    asignados_hombres <- sample(hombres$FOLIO, lugares_sobrantes)
   }
   
-  # Caso 3: Hombres caben y sobran lugares
-  if (nrow(hombres) <= oferta_hombres) {
-    asignados_hombres <- hombres$FOLIO
-    sobrante_hombres <- oferta_hombres - nrow(hombres)
-    asignados_mujeres <- c(
-      asignados_mujeres,
-      sample(mujeres$FOLIO[!mujeres$FOLIO %in% asignados_mujeres], 
-             min(nrow(mujeres) - length(asignados_mujeres), sobrante_hombres))
-    )
-  }
-  
-  # Guardar resultados
+  # Guardar resultados de la opción
   resultados[[opcion]] <- data.frame(
-    FOLIO = c(asignados_hombres, asignados_mujeres),
-    SEXO = c(rep("H", length(asignados_hombres)), rep("M", length(asignados_mujeres))),
+    FOLIO = c(asignados_mujeres, asignados_hombres),
+    SEXO = c(rep("M", length(asignados_mujeres)), rep("H", length(asignados_hombres))),
     OPC_ED01 = opcion
   )
+  
+
 }
 
 # Combinar resultados
 asignacion_final <- do.call(rbind, resultados)
 
-# Generar resumen
+# Generar resumen con totales por género y generales
 resumen <- demof_altgen1 %>%
   group_by(CVE_OPC, SEXO) %>%
   summarize(
-    gen_demanda = sum(gen_demanda),
-    OFERTA = sum(OFERTA),
-    caben = ifelse(gen_demanda <= OFERTA, "asigna", "sortea"),
-    dif = OFERTA - gen_demanda ,
-    .groups = "drop"  # Elimina el agrupamiento tras el resumen
-    )
+    Demanda = sum(gen_demanda),
+    Oferta = sum(OFERTA),
+    .groups = "drop"
+  ) %>%
+  # Agregar cantidad asignada por sexo
+  left_join(
+    asignacion_final %>%
+      group_by(OPC_ED01, SEXO) %>%
+      summarize(Asignado = n(), .groups = "drop"),
+    by = c("CVE_OPC" = "OPC_ED01", "SEXO" = "SEXO")
+  )
+
+# Calcular totales generales para cada opción
+totales <- resumen %>%
+  group_by(CVE_OPC) %>%
+  summarize(
+    SEXO = "TOTAL",
+    Demanda = sum(Demanda, na.rm = TRUE),
+    Oferta = sum(Oferta, na.rm = TRUE),
+    Asignado = sum(Asignado, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Calcular proporción por género
+resumen <- resumen %>%
+  group_by(CVE_OPC) %>%
+  mutate(Proporcion = round(Asignado / sum(Asignado, na.rm = TRUE), 2)) %>%
+  ungroup()
+
+# Agregar proporción para los totales (siempre será 1 para "TOTAL")
+totales <- totales %>%
+  mutate(Proporcion = 1)
+
+# Combinar resumen por sexo y totales generales, luego ordenar por CVE_OPC
+resumen_final <- bind_rows(resumen, totales) %>%
+  arrange(CVE_OPC)
 
 # Exportar el resumen a un archivo Excel
-write.xlsx(resumen, "resumen_asignacion.xlsx")
+write.xlsx(resumen_final, "resumen_asignacion_con_totales_y_proporciones.xlsx", overwrite = TRUE)
 
 
 # Guardar resultados en archivo
