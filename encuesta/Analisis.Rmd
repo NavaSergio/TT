@@ -1,0 +1,893 @@
+---
+title: "Encuesta de salida"
+author: "Guadalupe Martinez Ortega"
+date: "2025-08-20"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+# Librerías 
+library(writexl)
+library(readxl)
+library(ggplot2)
+library(openxlsx)
+library(dplyr)
+library(tidyr)
+library(forcats)
+library(scales) 
+#library(ggwordcloud)
+
+```
+
+```{r echo=FALSE, warning=FALSE}
+# Leer el archivo de las respuestas
+respuestas <- read_xlsx("respuestas.xlsx", sheet = "Respuestas de formulario 1")
+respuestas$Columna31 <- as.character(respuestas$Columna31)
+
+```
+
+## Participación por modalidad
+
+```{r echo=FALSE}
+modalidades <- as.data.frame(table(respuestas$`1_modalidad`))%>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(modalidades, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "Modalidades")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF")) +
+  #scale_fill_viridis_d() +
+  #colour = c("#B2FF8C", "#A6EDFF","#CCBFFF") +
+  coord_polar(theta = "y") + 
+  theme_void()
+```
+```{r}
+modalidad1 <- respuestas %>% filter(`1_modalidad` == "Modalidad 1")
+modalidad2 <- respuestas %>% filter(`1_modalidad` == "Modalidad 2")
+modalidad3 <- respuestas %>% filter(`1_modalidad` == "Modalidad 3")
+```
+## Pregunta 1
+# ¿Cómo te enteraste de la convocatoria de ingreso a la Educación Media Superior en la Zona Metropolitana del Valle de México? 
+```{r}
+# conteo total 
+
+p1mod1t <- modalidad1 %>% select("2_medios", Columna3:Columna12) %>%
+  pivot_longer(cols = everything(), values_to = "Medios") %>% 
+  filter(!is.na(Medios)) %>%
+  count(Medios, name = "Frecuencia") %>%
+  arrange(desc(Frecuencia)) %>%
+  mutate(Medios = factor(Medios, levels = rev(Medios)))
+
+ggplot(p1mod1t, aes(x = Frecuencia, y = Medios)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_text(aes(label = Frecuencia), hjust = 0, size = 3.5) +  # Tamaño de los valores
+  labs(
+    title = "Frecuencia de medios utilizados en Modalidad 1",
+    x = "Frecuencia",
+    y = "Medios"
+  ) +
+  theme_minimal(base_size = 8) +  # tamaño general del texto
+  theme(
+    plot.title = element_text(hjust = 1, size = 12, face = "bold"),  
+    axis.text.y = element_text(size = 8) # Tamaño de las respuestas
+  ) +
+  coord_cartesian(xlim = c(0, max(p1mod1t$Frecuencia) * 1.15))  # Espacio para los números
+
+p1mod2t <- modalidad2 %>% select("2_medios", Columna3:Columna12) %>%
+  pivot_longer(cols = everything(), values_to = "Medios") %>% 
+   filter(!is.na(Medios)) %>%
+  count(Medios, name = "Frecuencia") %>%
+  arrange(desc(Frecuencia)) %>%
+  mutate(Medios = factor(Medios, levels = rev(Medios)))
+
+ggplot(p1mod2t, aes(x = Frecuencia, y = Medios)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_text(aes(label = Frecuencia), hjust = 0, size = 3.5) +  # Tamaño de los valores
+  labs(
+    title = "Frecuencia de medios utilizados en Modalidad 2",
+    x = "Frecuencia",
+    y = "Medios"
+  ) +
+  theme_minimal(base_size = 8) +  # tamaño general del texto
+  theme(
+    plot.title = element_text(hjust = 1, size = 12, face = "bold"),  
+    axis.text.y = element_text(size = 8) # Tamaño de las respuestas
+  ) +
+  coord_cartesian(xlim = c(0, max(p1mod2t$Frecuencia) * 1.15))  # Espacio para los números
+
+p1mod3t <- modalidad3 %>% select("2_medios", Columna3:Columna12) %>%
+  pivot_longer(cols = everything(), values_to = "Medios") %>% 
+  filter(!is.na(Medios)) %>%
+  count(Medios, name = "Frecuencia") %>%
+  arrange(desc(Frecuencia)) %>%
+  mutate(Medios = factor(Medios, levels = rev(Medios)))
+
+ggplot(p1mod3t, aes(x = Frecuencia, y = Medios)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_text(aes(label = Frecuencia), hjust = 0, size = 3.5) +  # Tamaño de los valores
+  labs(
+    title = "Frecuencia de medios utilizados en Modalidad 3",
+    x = "Frecuencia",
+    y = "Medios"
+  ) +
+  theme_minimal(base_size = 8) +  # tamaño general del texto
+  theme(
+    plot.title = element_text(hjust = 1, size = 12, face = "bold"),  
+    axis.text.y = element_text(size = 8) # Tamaño de las respuestas
+  ) +
+  coord_cartesian(xlim = c(0, max(p1mod3t$Frecuencia) * 1.15))  # Espacio para los números
+```
+```{r}
+p1mod1t$Modalidad <- "Modalidad 1"
+p1mod2t$Modalidad <- "Modalidad 2"
+p1mod3t$Modalidad <- "Modalidad 3"
+
+medios <- rbind(p1mod1t, p1mod2t, p1mod3t) 
+
+# Separar los que tienen frecuencia >= 100
+medios_filtrados <- medios %>%
+  filter(Frecuencia >= 100)
+
+# Agrupar los que tienen frecuencia < 100 como "Otro"
+medios_otros <- medios %>%
+  filter(Frecuencia < 100) %>%
+  group_by(Modalidad) %>%
+  summarise(Frecuencia = sum(Frecuencia), .groups = 'drop') %>%
+  mutate(Medios = "Otro") %>%
+  select(Medios, Frecuencia, Modalidad)
+
+# Unir ambos conjuntos
+medios_final <- bind_rows(medios_filtrados, medios_otros)
+medios_final$Medios[medios_final$Medios == "Sitios web no oficiales relacionados con ECOEMS/ Mi derecho mi lugar"] <- "Sitios web no oficiales"
+
+#library(forcats)
+
+medios_final <- medios_final %>%
+  mutate(Medios = fct_reorder(Medios, Frecuencia, .desc = TRUE))
+
+
+ggplot(medios_final, aes(x = Medios, y = Frecuencia, fill = Modalidad)) +
+  geom_col(position = "dodge") +
+  theme_light() +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.text.x = element_text(angle = 90, hjust = 1, size = 8),
+    panel.spacing.x = unit(0.5, "lines")
+  )
+
+
+```
+```{r}
+
+# Calcular porcentaje por Medios
+medios_final <- medios_final %>%
+  group_by(Medios) %>%
+  mutate(Porcentaje = Frecuencia / sum(Frecuencia) * 100) %>%
+  ungroup()
+
+# Gráfico con etiquetas
+gp <- ggplot(medios_final, aes(x = Medios, y = Porcentaje, fill = Modalidad)) +
+  geom_col(position = position_dodge(width = 0.9)) +
+  geom_text(aes(label = paste0(round(Porcentaje, 1), "%")),
+            position = position_dodge(width = 0.9),
+            vjust = -0.3, size = 2) +
+  theme_classic() +
+  labs(y = "Porcentaje", title = "Distribución porcentual por Modalidad") +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.text.x = element_text(angle = 90, hjust = 1, size = 8),
+    panel.spacing.x = unit(0.5, "lines")
+  )
+ggsave("mediosporcentaje.png", plot = gp, width = 8, height = 6)
+gp
+```
+
+
+```{r}
+ 
+g <- ggplot(medios_final, aes(x = Medios, y = Frecuencia, fill = Modalidad)) +
+  geom_col(position = "dodge") +
+  geom_text(aes(label = comma(Frecuencia)), 
+            position = position_dodge(width = 0.9),
+            vjust = -0.2, size = 2) +
+  scale_y_continuous(labels = comma) +
+  theme_classic() +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.text.x = element_text(angle = 90, hjust = 1, size = 8),
+    panel.spacing.x = unit(0.5, "lines"))
+    #plot.margin = margin(t = 0,  # Margen superior
+     #                        r = 0,  # Margen derecho
+     #                        b = 0,  # Margen inferior
+      #                       l = 0)) # Margen izquierdo
+  
+ggsave("medios.png", plot = g, width = 8, height = 6)
+g
+```
+
+```{r}
+write.xlsx(medios_final,file="medios_final.xlsx")
+```
+
+
+## Pregunta 2
+# La información presentada en la convocatoria fue: 
+
+```{r}
+# pregunta 2 modalidad 1
+
+p2mod1 <- as.data.frame(table(modalidad1$`3_info_convocatoria`))%>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(p2mod1, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1,1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "La información de la convocatoria")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF","#EEB99F","#FF99FF")) +
+  #scale_fill_viridis_d() +
+  #colour = c("#B2FF8C", "#A6EDFF","#CCBFFF") +
+  coord_polar(theta = "y") + 
+  theme_void()
+
+
+```
+
+```{r}
+# pregunta 2 modalidad 2
+
+p2mod2 <- as.data.frame(table(modalidad2$`3_info_convocatoria`))%>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(p2mod2, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1,1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "La información de la convocatoria")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF","#EEB99F","#FF99FF")) +
+  #scale_fill_viridis_d() +
+  #colour = c("#B2FF8C", "#A6EDFF","#CCBFFF") +
+  coord_polar(theta = "y") + 
+  theme_void()
+
+
+```
+
+```{r}
+# pregunta 2 modalidad 3
+
+p2mod3 <- as.data.frame(table(modalidad3$`3_info_convocatoria`))%>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(p2mod3, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1,1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "La información de la convocatoria")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF","#EEB99F","#FF99FF")) +
+  #scale_fill_viridis_d() +
+  #colour = c("#B2FF8C", "#A6EDFF","#CCBFFF") +
+  coord_polar(theta = "y") + 
+  theme_void()
+
+
+```
+
+```{r}
+
+p2mod1$Modalidad <- "Modalidad 1"
+p2mod2$Modalidad <- "Modalidad 2"
+p2mod3$Modalidad <- "Modalidad 3"
+p2 <- rbind(p2mod1, p2mod2, p2mod3) 
+colnames(p2)[1]<-"Escala"
+p2$Modalidad<-as.factor(p2$Modalidad)
+p2$pcnt<-p2$pcnt*100
+```
+
+```{r}
+levels(p2$Escala)
+
+p2$Claridad <- factor(p2$Escala, levels = c("Yo no la leí, la leyó mi madre, padre o tutor","Muy confusa", "Confusa", "Clara","Muy clara"))
+```
+
+```{r}
+
+    ggplot(p2, aes(y=Modalidad,x=pcnt,fill=Claridad))+
+  geom_col(position="fill")+labs(fill="")+ylab("")+xlab("")+
+  scale_x_continuous(labels = scales::percent)+theme(legend.position = "bottom")
+  
+```
+
+## Pregunta 3
+# ¿Qué secciones de la convocatoria consideras que fueron más confusas? 
+```{r}
+# Pregunta 3 Modalidad 1
+
+# Conteo total
+
+p3mod1t <- modalidad1 %>% select("4_secciones", Columna:Columna31) %>%
+  pivot_longer(cols = everything(), values_to = "Secciones") %>% 
+   filter(!is.na(Secciones)) %>%
+  count(Secciones, name = "Frecuencia") %>%
+  arrange(desc(Frecuencia)) %>%
+  mutate(Secciones = factor(Secciones, levels = rev(Secciones)))
+
+ggplot(p3mod1t, aes(x = Frecuencia, y = Secciones)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_text(aes(label = Frecuencia), hjust = 0, size = 3.5) +  # Tamaño de los valores
+  labs(
+    title = "Secciones que fueron más confusas, Modalidad 1",
+    x = "Frecuencia",
+    y = "Secciones"
+  ) +
+  theme_minimal(base_size = 8) +  # tamaño general del texto
+  theme(
+    plot.title = element_text(hjust = 1, size = 12, face = "bold"),  
+    axis.text.y = element_text(size = 8) # Tamaño de las respuestas
+  ) +
+  coord_cartesian(xlim = c(0, max(p3mod1t$Frecuencia) * 1.15))  # Espacio para los números
+
+#####################
+
+p3mod2t <- modalidad2 %>% select("4_secciones", Columna:Columna31) %>%
+  pivot_longer(cols = everything(), values_to = "Secciones") %>% 
+   filter(!is.na(Secciones)) %>%
+  count(Secciones, name = "Frecuencia") %>%
+  arrange(desc(Frecuencia)) %>%
+  mutate(Secciones = factor(Secciones, levels = rev(Secciones)))
+
+ggplot(p3mod2t, aes(x = Frecuencia, y = Secciones)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_text(aes(label = Frecuencia), hjust = 0, size = 3.5) +  # Tamaño de los valores
+  labs(
+    title = "Secciones que fueron más confusas, Modalidad 2",
+    x = "Frecuencia",
+    y = "Secciones"
+  ) +
+  theme_minimal(base_size = 8) +  # tamaño general del texto
+  theme(
+    plot.title = element_text(hjust = 1, size = 12, face = "bold"),  
+    axis.text.y = element_text(size = 8) # Tamaño de las respuestas
+  ) +
+  coord_cartesian(xlim = c(0, max(p3mod2t$Frecuencia) * 1.15))  # Espacio para los números
+
+########################
+
+p3mod3t <- modalidad3 %>% select("4_secciones", Columna:Columna31) %>%
+  pivot_longer(cols = everything(), values_to = "Secciones") %>% 
+   filter(!is.na(Secciones)) %>%
+  count(Secciones, name = "Frecuencia") %>%
+  arrange(desc(Frecuencia)) %>%
+  mutate(Secciones = factor(Secciones, levels = rev(Secciones)))
+
+ggplot(p3mod3t, aes(x = Frecuencia, y = Secciones)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_text(aes(label = Frecuencia), hjust = 0, size = 3.5) +  # Tamaño de los valores
+  labs(
+    title = "Secciones que fueron más confusas, Modalidad 3",
+    x = "Frecuencia",
+    y = "Secciones"
+  ) +
+  theme_minimal(base_size = 8) +  # tamaño general del texto
+  theme(
+    plot.title = element_text(hjust = 1, size = 12, face = "bold"),  
+    axis.text.y = element_text(size = 8) # Tamaño de las respuestas
+  ) +
+  coord_cartesian(xlim = c(0, max(p3mod3t$Frecuencia) * 1.15))  # Espacio para los números
+```
+
+## Pregunta 4
+# La convocatoria
+```{r}
+p4mod1 <- as.data.frame(table(modalidad1$`5_difusion_convocatoria`))%>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(p4mod1, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "La convocatoria")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF")) +
+ labs(
+    title = "Difusión de la convocatoria",
+    subtitle = "Modalidad 1"
+  ) +
+  coord_polar(theta = "y") + 
+  theme_void()
+```
+
+```{r}
+p4mod2 <- as.data.frame(table(modalidad2$`5_difusion_convocatoria`))%>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(p4mod2, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "La convocatoria")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF")) +
+ labs(
+    title = "Difusión de la convocatoria",
+    subtitle = "Modalidad 2"
+  ) +
+  coord_polar(theta = "y") + 
+  theme_void()
+```
+
+```{r}
+p4mod3 <- as.data.frame(table(modalidad3$`5_difusion_convocatoria`))%>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(p4mod3, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "La convocatoria")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF")) +
+ labs(
+    title = "Difusión de la convocatoria",
+    subtitle = "Modalidad 3"
+  ) +
+  coord_polar(theta = "y") + 
+  theme_void()
+```
+
+## Pregunta 5
+# La información del instructivo del registro paso a paso fue
+```{r}
+p5mod1 <- as.data.frame(table(modalidad1$`6_info_instructivo`))%>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(p5mod1, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "La información del instructivo fue")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF", "#FF6A6A")) +
+ labs(
+    title = "Información del instructivo",
+    subtitle = "Modalidad 1"
+  ) +
+  coord_polar(theta = "y") + 
+  theme_void()
+```
+```{r}
+p5mod2 <- as.data.frame(table(modalidad2$`6_info_instructivo`))%>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(p5mod2, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "La información del instructivo fue")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF", "#FF6A6A")) +
+ labs(
+    title = "Información del instructivo",
+    subtitle = "Modalidad 2"
+  ) +
+  coord_polar(theta = "y") + 
+  theme_void()
+```
+```{r}
+p5mod3 <- as.data.frame(table(modalidad3$`6_info_instructivo`))%>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(p5mod3, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "La información del instructivo fue")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF", "#FF6A6A")) +
+ labs(
+    title = "Información del instructivo",
+    subtitle = "Modalidad 3"
+  ) +
+  coord_polar(theta = "y") + 
+  theme_void()
+```
+## Pregunta 6
+# ¿Tuviste algún problema para abrir o descargar la convocatoria o el instructivo?
+```{r}
+p6mod1 <- as.data.frame(table(modalidad1$`7_descargar_convocatoria_instructivo`))
+
+ggplot(p6mod1, aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(
+    title = "¿Tuviste algún problema para abrir o descargar la convocatoria o el instructivo?",
+    subtitle = "Modalidad 1",
+    x = "",
+    y = "Frecuencia"
+  ) +
+  geom_text(aes(label = Freq), vjust = 2, colour = "white")
+
+```
+```{r}
+p6mod2 <- as.data.frame(table(modalidad2$`7_descargar_convocatoria_instructivo`))
+
+ggplot(p6mod2, aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(
+    title = "¿Tuviste algún problema para abrir o descargar la convocatoria o el instructivo?",
+    subtitle = "Modalidad 2",
+    x = "",
+    y = "Frecuencia"
+  ) +
+  geom_text(aes(label = Freq), vjust = 2, colour = "white")
+
+```
+```{r}
+p6mod3 <- as.data.frame(table(modalidad3$`7_descargar_convocatoria_instructivo`))
+
+ggplot(p6mod3, aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(
+    title = "¿Tuviste algún problema para abrir o descargar la convocatoria o el instructivo?",
+    subtitle = "Modalidad 3",
+    x = "",
+    y = "Frecuencia"
+  ) +
+  geom_text(aes(label = Freq), vjust = 2, colour = "white")
+
+```
+
+## Pregunta 7
+# Las fechas entre cada etapa del proceso fueron 
+
+## Pregunta 8
+# Encontrar la página oficial Mi derecho mi lugar te resultó
+
+## Pregunta 9
+# La navegación por la plataforma de registro fue
+
+## Pregunta 10
+# Localizar las secciones del registro fue
+
+## Pregunta 11
+# Al proporcionar tus datos personales te sentiste
+
+## Pregunta 12
+# ¿Con qué frecuencia tuviste los siguientes problemas durante el registro?
+
+## Pregunta 13
+# ¿Qué dispositivo usaste para registrarte?
+
+```{r}
+
+```
+
+## Pregunta 14
+
+## Pregunta 15
+
+## Pregunta 30
+# ¿Estás satisfecho con tu opción asignada? 
+
+```{r}
+p30mod1 <- as.data.frame(table(modalidad1$`31_Estas_satisfecho_con_tu_opcion_asignada`)) %>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(p30mod1, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF", "#FF6A6A")) +
+ labs(
+    title = "Grado de satisfacción respecto a la escuela asignada",
+    subtitle = "Modalidad 1"
+  ) +
+  coord_polar(theta = "y") + 
+  theme_void()
+
+p30mod2 <- as.data.frame(table(modalidad2$`31_Estas_satisfecho_con_tu_opcion_asignada`))%>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+# Gráfica
+ggplot(p30mod2, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF", "#FF6A6A")) +
+ labs(
+    title = "Grado de satisfacción respecto a la escuela asignada",
+    subtitle = "Modalidad 2"
+  ) +
+  coord_polar(theta = "y") + 
+  theme_void()
+
+
+p30mod3 <- as.data.frame(table(modalidad3$`31_Estas_satisfecho_con_tu_opcion_asignada`))%>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+# Gráfica
+ggplot(p30mod3, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF", "#FF6A6A")) +
+ labs(
+    title = "Grado de satisfacción respecto a la escuela asignada",
+    subtitle = "Modalidad 3"
+  ) +
+  coord_polar(theta = "y") + 
+  theme_void()
+```
+## Pregunta 31
+# ¿Qué tan seguro estás de inscribirte en tu opción asignada? 
+
+```{r}
+p31mod1 <- as.data.frame(table(modalidad1$`32_Que_tan_segura/o_estas_de_inscribirte_en_tu_opcion_asignada`)) %>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(p31mod1, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF", "#FF6A6A")) +
+ labs(
+    title = "¿Qué tan seguro estás de inscribirte en tu opción asignada?",
+    subtitle = "Modalidad 1"
+  ) +
+  coord_polar(theta = "y") + 
+  theme_void()
+
+
+#### Modalidad 2
+
+p31mod2 <- as.data.frame(table(modalidad2$`32_Que_tan_segura/o_estas_de_inscribirte_en_tu_opcion_asignada`)) %>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(p31mod2, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF", "#FF6A6A")) +
+ labs(
+    title = "¿Qué tan seguro estás de inscribirte en tu opción asignada?",
+    subtitle = "Modalidad 2"
+  ) +
+  coord_polar(theta = "y") + 
+  theme_void()
+
+####### Modalidad 3
+
+p31mod3 <- as.data.frame(table(modalidad3$`32_Que_tan_segura/o_estas_de_inscribirte_en_tu_opcion_asignada`)) %>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(p31mod3, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1,1),
+            position = position_stack(vjust = 0.5), ###
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF", "#FF6A6A")) +
+ labs(
+    title = "¿Qué tan seguro estás de inscribirte en tu opción asignada?",
+    subtitle = "Modalidad 3"
+  ) +
+  coord_polar(theta = "y") + 
+  theme_void()
+```
+
+```{r}
+library(lessR)
+pregunta32m1 <- modalidad1$`32_Que_tan_segura/o_estas_de_inscribirte_en_tu_opcion_asignada`
+cat1 <- data.frame(pregunta32m1)
+
+# Gráfico de sectores
+cols <- c("#B2FF8C", "#A6EDFF","#CCBFFF", "#FF6A6A")
+PieChart(pregunta32m1, data = cat1, hole = 0,
+         fill = cols,
+         #title("Modalidad 3"),
+         labels_cex = 0.8,
+         labels_color = "black",
+         main = "¿Qué tan seguro estás de inscribirte en tu opción asignada?")
+text(x = 0.1, y = 0.8, label = "Modalidad 1",
+     col = "red",   # Color del texto
+     font = 1,      # Estilo
+     cex = 1)     # Tamaño
+
+```
+```{r}
+# 
+pregunta32m2 <- modalidad2$`32_Que_tan_segura/o_estas_de_inscribirte_en_tu_opcion_asignada`
+cat2 <- data.frame(pregunta32m2)
+
+# Gráfico de sectores
+cols <- c("#B2FF8C", "#A6EDFF","#CCBFFF", "#FF6A6A")
+PieChart(pregunta32m2, data = cat2, hole = 0,
+         fill = cols,
+         #title("Modalidad 3"),
+         labels_cex = 0.8,
+         labels_color = "black",
+         main = "¿Qué tan seguro estás de inscribirte en tu opción asignada?")
+text(x = 0.1, y = 0.8, label = "Modalidad 2",
+     col = "red",   # Color del texto
+     font = 1,      # Estilo
+     cex = 1)     # Tamaño
+```
+
+
+```{r}
+# 
+pregunta32m3 <- modalidad3$`32_Que_tan_segura/o_estas_de_inscribirte_en_tu_opcion_asignada`
+cat3 <- data.frame(pregunta32m3)
+
+# Gráfico de sectores
+cols <- c("#B2FF8C", "#A6EDFF","#CCBFFF", "#FF6A6A")
+PieChart(pregunta32m3, data = cat3, hole = 0,
+         fill = cols,
+         #title("Modalidad 3"),
+         labels_cex = 0.8,
+         labels_color = "black",
+         main = "¿Qué tan seguro estás de inscribirte en tu opción asignada?")
+text(x = 0.1, y = 0.8, label = "Modalidad 3",
+     col = "red",   # Color del texto
+     font = 1,      # Estilo
+     cex = 1)     # Tamaño
+```
+
+## Pregunta 33
+# En caso de haber respondido Poco segura/o o Nada segura/o, ¿cuál de las siguientes opciones es más probable que consideres tomar? 
+
+```{r}
+pregunta33_mod1 <- modalidad1 %>%
+  count(pregunta_33, name = "Freq") %>%
+  arrange(desc(Freq)) %>%
+  filter(!is.na(pregunta_33)) %>%
+  mutate(pregunta_33 = factor(pregunta_33, levels = rev(pregunta_33)))
+
+
+ggplot(pregunta33_mod1, aes(x = Freq, y = pregunta_33)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_text(aes(label = Freq), hjust = 0, size = 3.5) +  # Tamaño de los valores
+  labs(
+    title = "Acciones que los aspirantes consideran hacer, Modalidad 1",
+    x = "Frecuencia",
+    y = "Acciones"
+  ) +
+  theme_minimal(base_size = 8) +  # tamaño general del texto
+  theme(
+    plot.title = element_text(hjust = 1, size = 12, face = "bold"),  
+    axis.text.y = element_text(size = 8) # Tamaño de las respuestas
+  ) +
+  coord_cartesian(xlim = c(0, max(pregunta33_mod1$Freq) * 1.15))  # Espacio para los números
+
+#######################################
+pregunta33_mod2 <- modalidad2 %>%
+  count(pregunta_33, name = "Freq") %>%
+  arrange(desc(Freq)) %>%
+  filter(!is.na(pregunta_33)) %>%
+  mutate(pregunta_33 = factor(pregunta_33, levels = rev(pregunta_33)))
+
+
+ggplot(pregunta33_mod2, aes(x = Freq, y = pregunta_33)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_text(aes(label = Freq), hjust = 0, size = 3.5) +  # Tamaño de los valores
+  labs(
+    title = "Acciones que los aspirantes consideran hacer, Modalidad 2",
+    x = "Frecuencia",
+    y = "Acciones"
+  ) +
+  theme_minimal(base_size = 8) +  # tamaño general del texto
+  theme(
+    plot.title = element_text(hjust = 1, size = 12, face = "bold"),  
+    axis.text.y = element_text(size = 8) # Tamaño de las respuestas
+  ) +
+  coord_cartesian(xlim = c(0, max(pregunta33_mod2$Freq) * 1.15))  # Espacio para los números
+
+############
+pregunta33_mod3 <- modalidad3 %>%
+  count(pregunta_33, name = "Freq") %>%
+  arrange(desc(Freq)) %>%
+  filter(!is.na(pregunta_33)) %>%
+  mutate(pregunta_33 = factor(pregunta_33, levels = rev(pregunta_33)))
+
+
+ggplot(pregunta33_mod3, aes(x = Freq, y = pregunta_33)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_text(aes(label = Freq), hjust = 0, size = 3.5) +  # Tamaño de los valores
+  labs(
+    title = "Acciones que los aspirantes consideran hacer, Modalidad 3",
+    x = "Frecuencia",
+    y = "Acciones"
+  ) +
+  theme_minimal(base_size = 8) +  # tamaño general del texto
+  theme(
+    plot.title = element_text(hjust = 1, size = 12, face = "bold"),  
+    axis.text.y = element_text(size = 8) # Tamaño de las respuestas
+  ) +
+  coord_cartesian(xlim = c(0, max(pregunta33_mod3$Freq) * 1.15))  # Espacio para los números
+
+```
+
+```{r}
+
+```
+

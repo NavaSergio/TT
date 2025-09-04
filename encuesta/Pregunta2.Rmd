@@ -1,0 +1,142 @@
+---
+title: "Pregunta 2"
+author: "Dolores Sanchez"
+date: "2025-09-04"
+output: pdf_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Hola Twin, es la pregunta 2 la que quiero resolver. 
+También me ayudarías con la pregunta 29 que está en las páginas 11 a 13 del pdf. 
+
+```{r}
+# Librerías 
+library(writexl)
+library(readxl)
+library(ggplot2)
+library(openxlsx)
+library(dplyr)
+library(tidyr)
+library(forcats)
+library(scales) 
+#library(ggwordcloud)
+
+```
+
+```{r echo=FALSE, warning=FALSE}
+# Leer el archivo de las respuestas
+respuestas <- read_xlsx("respuestas.xlsx", sheet = "Respuestas de formulario 1")
+respuestas$Columna31 <- as.character(respuestas$Columna31)
+
+```
+
+
+```{r}
+modalidad1 <- respuestas %>% filter(`1_modalidad` == "Modalidad 1")
+modalidad2 <- respuestas %>% filter(`1_modalidad` == "Modalidad 2")
+modalidad3 <- respuestas %>% filter(`1_modalidad` == "Modalidad 3")
+```
+
+```{r}
+# pregunta 2 modalidad 1
+
+p2mod1 <- as.data.frame(table(modalidad1$`3_info_convocatoria`))%>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(p2mod1, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1,1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "La información de la convocatoria")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF","#EEB99F","#FF99FF")) +
+  #scale_fill_viridis_d() +
+  #colour = c("#B2FF8C", "#A6EDFF","#CCBFFF") +
+  coord_polar(theta = "y") + 
+  theme_void()
+
+
+```
+
+```{r}
+# pregunta 2 modalidad 2
+
+p2mod2 <- as.data.frame(table(modalidad2$`3_info_convocatoria`))%>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(p2mod2, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1,1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "La información de la convocatoria")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF","#EEB99F","#FF99FF")) +
+  #scale_fill_viridis_d() +
+  #colour = c("#B2FF8C", "#A6EDFF","#CCBFFF") +
+  coord_polar(theta = "y") + 
+  theme_void()
+
+
+```
+
+```{r}
+# pregunta 2 modalidad 3
+
+p2mod3 <- as.data.frame(table(modalidad3$`3_info_convocatoria`))%>% 
+  mutate(pcnt = `Freq` / sum(`Freq`)) %>% 
+  arrange(pcnt) %>%
+  mutate(etiquetas = scales::percent(pcnt))
+
+
+# Gráfica
+ggplot(p2mod3, aes(x = "", y = pcnt, fill = Var1)) +
+  geom_col(color = "black") +
+  geom_label(aes(label = etiquetas), color = c(1, 1,1,1,1),
+            position = position_stack(vjust = 0.5),
+            show.legend = FALSE) +
+  guides(fill = guide_legend(title = "La información de la convocatoria")) +
+  scale_fill_manual(values = c("#B2FF8C", "#A6EDFF","#CCBFFF","#EEB99F","#FF99FF")) +
+  #scale_fill_viridis_d() +
+  #colour = c("#B2FF8C", "#A6EDFF","#CCBFFF") +
+  coord_polar(theta = "y") + 
+  theme_void()
+
+
+```
+
+```{r}
+
+p2mod1$Modalidad <- "Modalidad 1"
+p2mod2$Modalidad <- "Modalidad 2"
+p2mod3$Modalidad <- "Modalidad 3"
+p2 <- rbind(p2mod1, p2mod2, p2mod3) 
+colnames(p2)[1]<-"Escala"
+p2$Modalidad<-as.factor(p2$Modalidad)
+p2$pcnt<-p2$pcnt*100
+```
+
+```{r}
+levels(p2$Escala)
+
+p2$Claridad <- factor(p2$Escala, levels = c("Yo no la leí, la leyó mi madre, padre o tutor","Muy confusa", "Confusa", "Clara","Muy clara"))
+```
+Pero el orden de la leyenda está al revés, y por otro lado, quisiera agregar las etiquetas de valor sobre las barras.
+
+Encontré esta página, pero ya no me da energía de revisarla 
+<https://stackoverflow.com/questions/69541579/ggplot2-reorder-items-in-a-legend>
+```{r}
+
+    ggplot(p2, aes(y=Modalidad,x=pcnt,fill=Claridad))+
+  geom_col(position="fill")+labs(fill="")+ylab("")+xlab("")+
+  scale_x_continuous(labels = scales::percent)+theme(legend.position = "bottom")
+  
+```
