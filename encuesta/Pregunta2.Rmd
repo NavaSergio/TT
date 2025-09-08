@@ -10,25 +10,102 @@ knitr::opts_chunk$set(echo = TRUE)
 Hola Twin, es la pregunta 2 la que quiero resolver. 
 También me ayudarías con la pregunta 29 que está en las páginas 11 a 13 del pdf. 
 
-```{r}
-# Librerías 
-library(writexl)
-library(readxl)
-library(ggplot2)
-library(openxlsx)
-library(dplyr)
-library(tidyr)
-library(forcats)
-library(scales) 
-#library(ggwordcloud)
 
+```{r}
+#| results: hide
+#| echo: false
+packages <- c("writexl","readxl","ggplot2","openxlsx","dplyr","tidyr",
+              "forcats","scales","psych","likert")
+if (length(setdiff(packages, rownames(installed.packages()))) > 0) {
+  install.packages(setdiff(packages, rownames(installed.packages())), repos = "http://cran.rstudio.com")
+}
+sapply(packages, require, character.only=TRUE)
 ```
+
 
 ```{r echo=FALSE, warning=FALSE}
 # Leer el archivo de las respuestas
 respuestas <- read_xlsx("respuestas.xlsx", sheet = "Respuestas de formulario 1")
 respuestas$Columna31 <- as.character(respuestas$Columna31)
+```
 
+
+```{r echo=FALSE, warning=FALSE}
+respuestas2 <- respuestas
+table(respuestas2$`3_info_convocatoria`,respuestas2$`5_difusion_convocatoria`)
+nivelesconvocatoria = c('Muy clara', 'Clara','Confusa','Muy confusa',
+                        'Yo no la leí, la leyó mi madre, padre o tutor')
+nivelesdifusion <-c('Se difundió mucho', 'Se difundió poco',
+                    'No se difundió lo suficiente')
+respuestas2$`3_info_convocatoria` <- factor(respuestas2$`3_info_convocatoria`,
+                                            nivelesconvocatoria,ordered = TRUE)
+respuestas2$`5_difusion_convocatoria` <- factor(respuestas2$`5_difusion_convocatoria`,
+                                            nivelesdifusion,ordered = TRUE)
+ggplot(respuestas2, aes(x=`1_modalidad`, fill=`3_info_convocatoria`)) +
+  geom_bar(position="fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(x="Modalidad", y="Porcentaje", fill="Información de la convocatoria") +
+  theme_minimal() +
+  scale_fill_discrete(breaks = rev(levels(respuestas2$`3_info_convocatoria`))) +
+  coord_flip() +
+  theme(legend.position = "bottom")
+  theme_minimal()
+
+  # Convertir columnas 55 a 84 a factores ordenados
+  for(i in 55:84) {
+    respuestas2[[i]] <- factor(respuestas2[[i]], 
+                              levels = 1:8,
+                              ordered = TRUE)
+  }
+```
+
+
+```{r echo=FALSE, warning=FALSE}
+#summary(respuestas2[,55:84])
+  respuestas2 %>%
+    select(55:64) %>%
+    gather(key = "pregunta", value = "respuesta") %>%
+    filter(!is.na(respuesta)) %>%  # Remove NA values before calculating percentages
+    ggplot(aes(x = pregunta, fill = respuesta)) +
+    geom_bar(position = "fill") +
+    coord_flip() +
+    scale_y_continuous(labels = scales::percent) +
+    labs(x = "Preguntas", y = "Porcentaje", fill = "Respuesta") +
+    theme_minimal() +
+    theme(legend.position = "bottom") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  respuestas2 %>%
+    select(65:74) %>%
+    gather(key = "pregunta", value = "respuesta") %>%
+    filter(!is.na(respuesta)) %>%  # Remove NA values before calculating percentages
+    ggplot(aes(x = pregunta, fill = respuesta)) +
+    geom_bar(position = "fill") +
+    coord_flip() +
+    scale_y_continuous(labels = scales::percent) +
+    labs(x = "Preguntas", y = "Porcentaje", fill = "Respuesta") +
+    theme_minimal() +
+    theme(legend.position = "bottom") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+  respuestas2 %>%
+    select(75:84) %>%
+    gather(key = "pregunta", value = "respuesta") %>%
+    filter(!is.na(respuesta)) %>%  # Remove NA values before calculating percentages
+    ggplot(aes(x = pregunta, fill = respuesta)) +
+    geom_bar(position = "fill") +
+    coord_flip() +
+    scale_y_continuous(labels = scales::percent) +
+    labs(x = "Preguntas", y = "Porcentaje", fill = "Respuesta") +
+    theme_minimal() +
+    theme(legend.position = "bottom") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r echo=FALSE, warning=FALSE}
+xlik = likert(respuestas2[,55:84])
+plot(xlik, type = "bar", centered = TRUE) + 
+    theme(legend.position = "bottom")
+summary(xlik)
 ```
 
 
